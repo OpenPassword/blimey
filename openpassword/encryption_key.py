@@ -16,22 +16,21 @@ def derive_openssl_key(key, salt, hash=MD5):
 
 
 class EncryptionKey:
+
     def __init__(self, key):
         self.data = b64decode(key["data"])
         self.validation = b64decode(key["validation"])
         self.iterations = key["iterations"]
 
-        self.decrypted_key = None
-
     def decrypt(self, password):
+        decrypted_key = None
         decryption_key = self._decrypt_encryption_key(password)
         validation_key = self._decrypt_validation_key(decryption_key)
 
         if decryption_key == validation_key:
-            self.decrypted_key = decryption_key
-            return True
+            decrypted_key = decryption_key
 
-        return False
+        return (decrypted_key is not None, decrypted_key)
 
     def _decrypt_encryption_key(self, password):
         data_key = self._derive_password_key(password)
