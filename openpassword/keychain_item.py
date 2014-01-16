@@ -11,35 +11,37 @@ class KeychainItem:
         self.key_id = item["keyID"]
         self.encrypted = b64decode(item["encrypted"])
         self.data = None
+        self.initialisation_vector = None
 
     def set_private_contents(self, data):
         self.encrypted = None
         self.data = data
 
-    def _encrypt(self, initialisation_vector, original_key):
+    def _encrypt(self, original_key):
         data = json.dumps(self.data)
         data = byte_pad(data.encode('utf8'))
-        data = encrypt(data, self._derive_key(original_key, initialisation_vector))
+        data = encrypt(data, self._derive_key(original_key, self.initialisation_vector))
         return data
 
     def encrypt(self, original_key):
-        initialisation_vector = self._generate_iv()
-        encrypted_data = self._encrypt(initialisation_vector, original_key)
+        self._generate_iv()
+        encrypted_data = self._encrypt(original_key)
 
         self.encrypted = b''.join(
-            ['Salted__'.encode('utf8'), initialisation_vector, encrypted_data])
+            ['Salted__'.encode('utf8'), self.initialisation_vector, encrypted_data])
 
     def decrypt(self, original_key):
-        data = decrypt(self.encrypted[16:], self._derive_key(original_key, self._extract_iv()))
+        self._extract_iv()
+        data = decrypt(self.encrypted[16:], self._derive_key(original_key, self.initialisation_vector))
         data = strip_byte_padding(data)
 
         self.data = json.loads(data.decode('utf8'))
 
     def _generate_iv(self):
-        return urandom(8)
+        self.initialisation_vector = urandom(8)
 
     def _extract_iv(self):
-        return self.encrypted[8:16]
+        self.initialisation_vector = self.encrypted[8:16]
 
     def _derive_key(self, key, iv):
         return derive_openssl_key(key, iv)
