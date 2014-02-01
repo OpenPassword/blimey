@@ -1,5 +1,4 @@
 from openpassword.config import Config
-from openpassword.encryption_key_repository import EncryptionKeyRepository
-from openpassword.keychain_item_repository import KeychainItemRepository
+from openpassword.agile_keychain_repository import AgileKeychainRepository
 from openpassword.encryption_key import EncryptionKey
 from openpassword.keychain import Keychain
