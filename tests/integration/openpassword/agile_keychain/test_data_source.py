@@ -15,8 +15,10 @@ class AgileKeychainDataSourceTest:
         self._initialise_data_source()
         self._check_keychain_dir()
         self._check_data_default_dir()
+        self._check_config_dir()
         self._check_keys_file()
         self._check_contents_file()
+        self._check_buildnum_file()
         self._check_encryption_keys_file()
 
     def it_authenticates_with_a_password(self):
@@ -56,11 +58,17 @@ class AgileKeychainDataSourceTest:
     def _get_data_default_dir(self):
         return os.path.join(self._temporary_path, "data", "default")
 
+    def _get_config_dir(self):
+        return os.path.join(self._temporary_path, 'config')
+
     def _check_keychain_dir(self):
         assert self._exists_and_is_dir(self._temporary_path)
 
     def _check_data_default_dir(self):
         assert self._exists_and_is_dir(self._get_data_default_dir())
+
+    def _check_config_dir(self):
+        assert self._exists_and_is_dir(self._get_config_dir())
 
     def _check_keys_file(self):
         keys_file = os.path.join(self._get_data_default_dir(), '1password.keys')
@@ -69,6 +77,10 @@ class AgileKeychainDataSourceTest:
     def _check_contents_file(self):
         contents_file = os.path.join(self._get_data_default_dir(), 'contents.js')
         assert self._exists_and_is_file(contents_file)
+
+    def _check_buildnum_file(self):
+        buildnum_file = os.path.join(self._get_config_dir(), 'buildnum')
+        assert self._exists_and_is_file(buildnum_file)
 
     def _check_encryption_keys_file(self):
         encryption_keys_file = os.path.join(self._get_data_default_dir(), 'encryptionKeys.js')
