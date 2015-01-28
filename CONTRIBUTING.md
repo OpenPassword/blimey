@@ -23,11 +23,7 @@ The consequences of this are often: small, simple and clean methods and classes.
 
 Blimey is developed in **Python 3**. We try to keep the number of dependencies low, not always with great success. To check the dependecies used by Blimey, see the `requirements.txt` file.
 
-To install nose you'll need to run pip. Depending on your setup, you pip executable might be called pip or pip3:
-
-`pip3 install nose`
-
-For the remaining tools, you can take advantage of the requirements.txt contained in the repository:
+To install all the tools needed for development, you can take advantage of the `requirements.txt` file contained in the repository:
 
 `pip3 install -r requirements.txt --use-mirrors`
 
