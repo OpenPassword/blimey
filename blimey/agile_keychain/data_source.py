@@ -2,7 +2,7 @@ import gc
 from time import time
 
 from blimey import abstract
-from blimey.exceptions import UnauthenticatedDataSourceException
+from blimey.exceptions import UnauthenticatedDataSourceException, ItemNotFoundException
 from blimey.agile_keychain._manager import FileSystemManager, KeyManager, ItemManager
 from blimey.agile_keychain import _crypto as crypto
 from blimey.agile_keychain.agile_keychain_item import AgileKeychainItem
@@ -73,7 +73,7 @@ class DataSource(abstract.DataSource):
         try:
             self._item_manager.get_by_id(item_id)
             return self._create_unique_item_id()
-        except:
+        except ItemNotFoundException:
             return item_id
 
     def _encrypt_item(self, item):

@@ -137,7 +137,7 @@ class DataSourceSpec:
     @patch.object(ItemManager, 'get_by_id')
     @patch("blimey.agile_keychain.data_source.crypto.generate_id")
     def it_guarantees_generated_item_id_is_unique(self, generate_id, get_item_by_id):
-        get_item_by_id = [ItemNotFoundException, Mock()]
+        get_item_by_id.side_effect = [Mock(), ItemNotFoundException]
         generate_id.side_effect = ['123', '567']
 
         key3 = Mock()
