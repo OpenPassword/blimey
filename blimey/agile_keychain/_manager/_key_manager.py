@@ -28,18 +28,15 @@ else:
 class KeyManager:
     def __init__(self, path):
         self._base_path = path
+        self._keys_file_path = os.path.join(self._base_path, 'data', 'default', '1password.keys')
 
     def get_keys(self):
         return self._read_keys_from_keys_plist()
 
-    def create_key(self, password, level='SL5', iterations=DEFAULT_ITERATIONS):
-        return create_key(password, level, iterations)
-
     def save_key(self, new_key):
-        existing_keys = self._read_keys_from_keys_plist()
-
         keys = []
-        for old_key in existing_keys:
+
+        for old_key in self._read_keys_from_keys_plist():
             if old_key.identifier == new_key.identifier:
                 continue
 
@@ -49,24 +46,7 @@ class KeyManager:
             keys.append(old_key)
 
         keys.append(new_key)
-        keys = [self._serialize_key(key) for key in keys]
-
-        template_path = os.path.join(os.path.dirname(__file__), '..', 'template', '1password.keys.template')
-
-        with open(template_path, 'r') as file:
-            plist_template = Template(file.read())
-
-        with open(os.path.join(self._base_path, 'data', 'default', '1password.keys'), 'w') as file:
-            file.write(plist_template.render({'keys': keys}))
-
-    def _serialize_key(self, key):
-        return {
-            'identifier': key.identifier,
-            'iterations': key.iterations,
-            'data': (b64encode(key.data) + b'\x00').decode('ascii'),
-            'validation': (b64encode(key.validation) + b'\x00').decode('ascii'),
-            'level': key.level
-        }
+        self._render_keys(keys)
 
     def _read_keys_from_keys_plist(self):
         plist_contents = self._load_keys_plist()
@@ -79,10 +59,10 @@ class KeyManager:
         return [EncryptedKey(key) for key in keys['list']]
 
     def _load_keys_plist(self):
-        if os.path.exists(os.path.join(self._base_path, 'data', 'default', '1password.keys')) is False:
+        if os.path.exists(self._keys_file_path) is False:
             return None
 
-        with open(os.path.join(self._base_path, 'data', 'default', '1password.keys'), 'rb') as file:
+        with open(self._keys_file_path, 'rb') as file:
             data = file.read()
 
         return self._remove_null_bytes(data)
@@ -106,3 +86,28 @@ class KeyManager:
         result = result + data[last:]
 
         return result
+
+    def _render_keys(self, keys):
+        template = self._load_template()
+        keys = [self._serialize_key(key) for key in keys]
+
+        with open(self._keys_file_path, 'w') as file:
+            file.write(template.render({'keys': keys}))
+
+    def _load_template(self):
+        template_path = self._get_key_plist_template_path()
+
+        with open(template_path, 'r') as file:
+            return Template(file.read())
+
+    def _serialize_key(self, key):
+        return {
+            'identifier': key.identifier,
+            'iterations': key.iterations,
+            'data': (b64encode(key.data) + b'\x00').decode('ascii'),
+            'validation': (b64encode(key.validation) + b'\x00').decode('ascii'),
+            'level': key.level
+        }
+
+    def _get_key_plist_template_path(self):
+        return os.path.join(os.path.dirname(__file__), '..', 'template', '1password.keys.template')
