@@ -21,16 +21,9 @@ The consequences of this are often: small, simple and clean methods and classes.
 
 ## Tools
 
-Blimey is developed in **Python 3**. We try to keep the number of dependencies low, so currently we're using the following tools to help us achieve our goals:
+Blimey is developed in **Python 3**. We try to keep the number of dependencies low, not always with great success. To check the dependecies used by Blimey, see the `requirements.txt` file.
 
-* nose - A testing framework for Python
-* spec - A nose plugin to allow for a more BBD like output
-* fudge - A mocking framework for Python
-* tissue - A nose plugin to check code for PEP8 style violations
-* pbkdf2 - A python library for implementing the [Password-Based Key Derivation Function 2](http://en.wikipedia.org/wiki/PBKDF2)
-* pycrypto - A python cryptography library
-
-To install node you'll need to run pip. Depending on your setup, you pip executable might be called pip or pip3:
+To install nose you'll need to run pip. Depending on your setup, you pip executable might be called pip or pip3:
 
 `pip3 install nose`
 
