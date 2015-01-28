@@ -109,7 +109,7 @@ class DataSource(abstract.DataSource):
             data = {}
 
         default_data = {
-            'createdAt': time(),
+            'createdAt': int(time()),
             'location': '',
             'locationKey': '',
             'typeName': 'passwords.Password',
