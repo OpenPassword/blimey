@@ -156,8 +156,7 @@ def byte_pad(input_bytes, length=16):
 
 
 def strip_byte_padding(input_bytes, length=16):
-    if fmod(len(input_bytes), length) != 0:
-        raise ValueError("Input byte length is not divisible by %s " % length)
+    _assert_bytes_length_divisible_by(input_bytes, length)
 
     if input_bytes == b'':
         return input_bytes
@@ -167,7 +166,16 @@ def strip_byte_padding(input_bytes, length=16):
     if last_byte_value > length:
         return input_bytes
 
-    if list(set(input_bytes[-last_byte_value:])) == [last_byte_value]:
-        return input_bytes[0:-last_byte_value]
+    _assert_last_byte_value_indicates_padding_size(input_bytes, last_byte_value)
 
-    raise ValueError("Invalid padding")
+    return input_bytes[0:-last_byte_value]
+
+
+def _assert_bytes_length_divisible_by(input_bytes, length):
+    if fmod(len(input_bytes), length) != 0:
+        raise ValueError("Input byte length is not divisible by %s " % length)
+
+
+def _assert_last_byte_value_indicates_padding_size(input_bytes, byte_value):
+    if list(set(input_bytes[-byte_value:])) != [byte_value]:
+        raise ValueError("Invalid padding")
