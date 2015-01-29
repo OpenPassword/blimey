@@ -1,6 +1,6 @@
 from nose.tools import raises
 
-from blimey.agile_keychain._crypto import decrypt_key, encrypt_key, create_key, decrypt_item, encrypt_item
+from blimey.agile_keychain import _crypto as crypto
 from blimey.agile_keychain._key import EncryptedKey, DecryptedKey
 from blimey.agile_keychain.agile_keychain_item import EncryptedAgileKeychainItem, AgileKeychainItem
 from blimey.exceptions import IncorrectPasswordException
@@ -10,45 +10,60 @@ class CryptoSpec:
     @raises(IncorrectPasswordException)
     def it_throws_if_key_decryption_fails(self):
         key = self.get_key()
-        decrypt_key(key, 'wrongpassword')
+        crypto.decrypt_key(key, 'wrongpassword')
 
     def it_silently_decrypts_keys_with_correct_password(self):
         key = self.get_key()
-        decrypt_key(key, 'masterpassword123')
+        crypto.decrypt_key(key, 'masterpassword123')
 
     def it_reencrypts_keys_with_new_password(self):
         key = self.get_key()
-        decrypted_key = decrypt_key(key, 'masterpassword123')
-        encrypted_key = encrypt_key(decrypted_key, 'new_and_better_password')
-        decrypt_key(encrypted_key, 'new_and_better_password')
+        decrypted_key = crypto.decrypt_key(key, 'masterpassword123')
+        encrypted_key = crypto.encrypt_key(decrypted_key, 'new_and_better_password')
+        crypto.decrypt_key(encrypted_key, 'new_and_better_password')
 
     def it_creates_keys(self):
-        encrypted_key = create_key('password', 'SL4', 10)
-        decrypt_key(encrypted_key, 'password')
+        encrypted_key = crypto.create_key('password', 'SL4', 10)
+        crypto.decrypt_key(encrypted_key, 'password')
 
         assert encrypted_key.level == 'SL4'
         assert encrypted_key.iterations == 10
 
     def it_decrypts_items(self):
         encrypted_key = self.get_key()
-        decrypted_key = decrypt_key(encrypted_key, 'masterpassword123')
+        decrypted_key = crypto.decrypt_key(encrypted_key, 'masterpassword123')
         encrypted_item = self.get_item()
-        decrypted_item = decrypt_item(encrypted_item, decrypted_key)
+        decrypted_item = crypto.decrypt_item(encrypted_item, decrypted_key)
 
         assert decrypted_item['encrypted']['fields'][0]['value'] == 'someuser'
         assert decrypted_item['encrypted']['fields'][1]['value'] == 'password123'
 
     def it_encrypts_items(self):
         encrypted_key = self.get_key()
-        decrypted_key = decrypt_key(encrypted_key, 'masterpassword123')
+        decrypted_key = crypto.decrypt_key(encrypted_key, 'masterpassword123')
         decrypted_item = self.get_item()
         decrypted_item['encrypted'] = {'fields': [{'value': 'foo'}, {'value': 'bar'}, {'ball': '⚽'}]}
 
-        encrypted_item = encrypt_item(decrypted_item, decrypted_key)
-        redecrypted_item = decrypt_item(encrypted_item, decrypted_key)
+        encrypted_item = crypto.encrypt_item(decrypted_item, decrypted_key)
+        redecrypted_item = crypto.decrypt_item(encrypted_item, decrypted_key)
 
         assert redecrypted_item['encrypted']['fields'][0]['value'] == 'foo'
         assert redecrypted_item['encrypted']['fields'][1]['value'] == 'bar'
+
+    def it_byte_pads_to_specified_length(self):
+        assert crypto.byte_pad(b'', 6) == b''
+        assert crypto.byte_pad(b'abcd', 6) == b'abcd\x02\x02'
+        assert crypto.byte_pad(b'abcdef', 6) == b'abcdef'
+
+    def it_strips_byte_padding_at_specified_length(self):
+        assert crypto.strip_byte_padding(b'', 6) == b''
+        assert crypto.strip_byte_padding(b'abcd\x02\x02', 6) == b'abcd'
+        assert crypto.strip_byte_padding(b'abcdef', 3) == b'abcdef'
+        assert crypto.strip_byte_padding(b'abcdef', 6) == b'abcdef'
+
+    @raises(ValueError)
+    def it_throws_on_invalid_padding(self):
+        crypto.strip_byte_padding(b'abc\x03\x03\x04', 6)
 
     def get_key(self):
         return EncryptedKey({

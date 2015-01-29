@@ -87,7 +87,7 @@ def decrypt_item(item, decrypted_key):
     init_vector = encrypted[8:16]
     derived_key = _derive_openssl_key(decrypted_key.key, init_vector)
     decrypted = _aes_decrypt(derived_key[0:16], derived_key[16:], encrypted[16:])
-    decrypted = _strip_byte_padding(decrypted)
+    decrypted = strip_byte_padding(decrypted)
     decrypted_data = json.loads(decrypted.decode('utf8'))
 
     decrypted_item = AgileKeychainItem(item)
@@ -101,7 +101,7 @@ def encrypt_item(item, decrypted_key):
     derived_key = _derive_openssl_key(decrypted_key.key, init_vector)
 
     data = json.dumps(item['encrypted'])
-    data = _byte_pad(data.encode('utf8'), 16)
+    data = byte_pad(data.encode('utf8'), 16)
     data = _aes_encrypt(derived_key[0:16], derived_key[16:], data)
 
     encrypted_data = b64encode(b'Salted__' + init_vector + data).decode('ascii')
@@ -139,7 +139,7 @@ def _aes_decrypt(key, init_vector, data):
     return AES.new(key, AES.MODE_CBC, init_vector).decrypt(data)
 
 
-def _byte_pad(input_bytes, length=8):
+def byte_pad(input_bytes, length=16):
     if length > 256:
         raise ValueError("Maximum padding length is 256")
 
@@ -155,22 +155,19 @@ def _byte_pad(input_bytes, length=8):
     return input_bytes
 
 
-def _strip_byte_padding(input_bytes, length=16):
+def strip_byte_padding(input_bytes, length=16):
     if fmod(len(input_bytes), length) != 0:
         raise ValueError("Input byte length is not divisible by %s " % length)
 
-    # Get the last {length} bytes of the input bytes, reversed
-    if len(input_bytes) == length:
-        byte_block = bytes(input_bytes[::-1])
-    else:
-        byte_block = bytes(input_bytes[:length:-1])
+    if input_bytes == b'':
+        return input_bytes
 
-    # If input bytes is padded, the padding is equal to byte value of the number
-    # of bytes padded. So we can read the padding value from the last byte..
-    padding_byte = byte_block[0:1]
+    last_byte_value = ord(input_bytes[-1:].decode())
 
-    for i in range(1, ord(padding_byte.decode())):
-        if byte_block[i:i+1] != padding_byte:
-            return input_bytes
+    if last_byte_value > length:
+        return input_bytes
 
-    return input_bytes[0:-ord(padding_byte.decode())]
+    if list(set(input_bytes[-last_byte_value:])) == [last_byte_value]:
+        return input_bytes[0:-last_byte_value]
+
+    raise ValueError("Invalid padding")
