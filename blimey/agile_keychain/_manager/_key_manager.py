@@ -5,7 +5,6 @@ from jinja2 import Template
 from base64 import b64encode
 from xml.parsers.expat import ExpatError
 
-from blimey.agile_keychain._crypto import create_key
 from blimey.agile_keychain._key import EncryptedKey
 from blimey.exceptions import KeyAlreadyExistsForLevelException, InvalidKeyFileException
 
